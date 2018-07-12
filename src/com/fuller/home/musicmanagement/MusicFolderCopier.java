@@ -625,6 +625,12 @@ public class MusicFolderCopier
 		return FLACFiles;
 	}
 	
+	/**
+	 * Convenience method to return all files that end with .flac in a specified directory.
+	 * 
+	 * @param currentDirectory The directory to look for .flac files
+	 * @return A File array of files that end with .flac
+	 */
 	private File[] findFLACFiles(File currentDirectory)
 	{
 		return currentDirectory.listFiles(new FileFilter() {
