@@ -112,7 +112,12 @@ public class MusicFolderCopier
 					manageCopyForArtist(mcs);				
 				}
 			}
-		}	
+		}
+		
+		long now = System.currentTimeMillis();
+		long totalTime = now - timer;
+		System.out.println("***************************************************************");
+		System.out.println("TOTAL TIME: " + totalTime/1000 + " seconds");
 	}
 	
 	private void manageCopyForArtist(MusicCopierState mcs)

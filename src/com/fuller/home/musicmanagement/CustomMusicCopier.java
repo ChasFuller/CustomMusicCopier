@@ -74,7 +74,7 @@ public class CustomMusicCopier
 				else
 				{
 					useFLAC = false;
-					System.out.println("Dlease type in the full path to the file converter to use to convert FLAC files into MP3s:");
+					System.out.println("Please type in the full path to the file converter to use to convert FLAC files into MP3s:");
 					converterPath = scanner.nextLine();
 				}
 				
@@ -131,6 +131,7 @@ public class CustomMusicCopier
 		else
 		{
 			System.out.println("\tMP3 files only.");
+			System.out.println("FLAC->MP3 converter location: " + converterPath);
 		}
 		if (simulate)
 		{
