@@ -35,30 +35,38 @@ public class BlacklistParser
             
             // Get the artist folders for the blacklist
 			JSONArray foldersList = (JSONArray) blacklist.get(FOLDERS);
-			aBlacklist.addFolders(convertJSONArrayToStringCollection(foldersList));
+			if (foldersList != null)
+			{
+				aBlacklist.addFolders(convertJSONArrayToStringCollection(foldersList));
+			}
 			
 			// Get the albums for the blacklist
 			JSONArray albumsList = (JSONArray) blacklist.get(ALBUMS);
-			Iterator<JSONObject> albumsIterator = convertJSONArrayToJSONObjectCollection(albumsList).iterator();
-			while (albumsIterator.hasNext())
+			if (albumsList != null)
 			{
-				JSONObject albumDetails = albumsIterator.next();
-				String artistFolder = (String) albumDetails.get(ARTIST_FOLDER);	
-				String albumFolder = (String) albumDetails.get(ALBUM_FOLDER);
-				aBlacklist.addAlbum(artistFolder, albumFolder);
+				Iterator<JSONObject> albumsIterator = convertJSONArrayToJSONObjectCollection(albumsList).iterator();
+				while (albumsIterator.hasNext())
+				{
+					JSONObject albumDetails = albumsIterator.next();
+					String artistFolder = (String) albumDetails.get(ARTIST_FOLDER);	
+					String albumFolder = (String) albumDetails.get(ALBUM_FOLDER);
+					aBlacklist.addAlbum(artistFolder, albumFolder);
+				}
 			}
 			
 			// Get the albums for the blacklist
 			JSONArray songsList = (JSONArray) blacklist.get(SONGS);
-			Iterator<JSONObject> songsIterator = convertJSONArrayToJSONObjectCollection(songsList).iterator();
-			while (songsIterator.hasNext())
+			if (songsList != null)
 			{
-				JSONObject songDetails = songsIterator.next();
-				String artistFolder = (String) songDetails.get(ARTIST_FOLDER);
-				String songName = (String) songDetails.get(SONG_NAME);
-				aBlacklist.addSong(artistFolder, songName);
+				Iterator<JSONObject> songsIterator = convertJSONArrayToJSONObjectCollection(songsList).iterator();
+				while (songsIterator.hasNext())
+				{
+					JSONObject songDetails = songsIterator.next();
+					String artistFolder = (String) songDetails.get(ARTIST_FOLDER);
+					String songName = (String) songDetails.get(SONG_NAME);
+					aBlacklist.addSong(artistFolder, songName);
+				}
 			}
- 
         }
 		catch (Exception e)
 		{
