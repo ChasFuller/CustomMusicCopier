@@ -131,7 +131,7 @@ public class CustomMusicCopier
 		else
 		{
 			System.out.println("\tMP3 files only.");
-			System.out.println("FLAC->MP3 converter location: " + converterPath);
+			System.out.println("\tFLAC->MP3 converter location: " + converterPath);
 		}
 		if (simulate)
 		{
