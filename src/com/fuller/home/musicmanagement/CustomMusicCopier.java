@@ -19,6 +19,7 @@ public class CustomMusicCopier
 		
 		boolean isReadyToRun = false;
 		
+		Scanner scanner = new Scanner(System.in);
 		System.out.println("CustomMusicCopier creates a copy of a music folder, optionally applying a specific blacklist to exclude artists and/or tracks");
 			
 		if (args.length == 6)
@@ -49,9 +50,7 @@ public class CustomMusicCopier
 			isReadyToRun = true;
 		}
 		else
-		{			
-			Scanner scanner = new Scanner(System.in);
-		
+		{				
 			while(!isReadyToRun)
 			{
 				System.out.println("Please type in the full path to the music directory:");
@@ -90,12 +89,11 @@ public class CustomMusicCopier
 				String readyToGo = scanner.nextLine();
 				if (readyToGo.toUpperCase().equals("YES"))
 				{
-					scanner.close();
 					isReadyToRun = true;
 				}
 				else if (readyToGo.toUpperCase().equals("EXIT"))
 				{
-					scanner.close();
+					System.out.println("Exiting...");
 					break;
 				}
 			}
@@ -106,9 +104,11 @@ public class CustomMusicCopier
 			MusicFolderCopier copier = new MusicFolderCopier();
 			copier.copy(musicPath, copyPath, blacklistPath, useFLAC, converterPath, simulate);
 			System.out.println("Done!");
+			System.out.println("Hit enter to exit.");
+			scanner.nextLine();
 		}
-		
-		System.out.println("Exiting...");
+			
+		scanner.close();
 	}
 	
 	private static void printCurrentState(String musicPath, String copyPath, String blacklistPath, boolean useFLAC, String converterPath, boolean simulate)
