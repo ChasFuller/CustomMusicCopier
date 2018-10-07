@@ -14,7 +14,7 @@ import org.apache.commons.io.FilenameUtils;
 public class MusicFolderCopier
 {
 	private boolean isSimulation = true;
-	private static final int CHECKPOINT_COUNT = 10;
+	private static final int CHECKPOINT_COUNT = 50;
 	
 	/* COPY LOGIC:
 	 * 
@@ -516,10 +516,20 @@ public class MusicFolderCopier
 	
 	private Blacklist getCurrentBlacklist(String blacklistPath)
 	{
-		if (blacklistPath != null && new File(blacklistPath).exists())
+		if (blacklistPath != null)
 		{
-			BlacklistParser myParser = new BlacklistParser();
-			return myParser.parse(blacklistPath);
+			if (!new File(blacklistPath).exists())
+			{
+				// Handle the case where the file doesn't exist
+				System.err.println("Blacklist file " + blacklistPath
+						+ " doesn't exist, running without blacklist file!");;
+				return null;
+			}
+			else
+			{
+				BlacklistParser myParser = new BlacklistParser();
+				return myParser.parse(blacklistPath);
+			}
 		}
 		else
 		{
