@@ -5,6 +5,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 
 import org.apache.commons.io.FileUtils;
@@ -13,7 +14,7 @@ import org.apache.commons.io.FilenameUtils;
 public class MusicFolderCopier
 {
 	private boolean isSimulation = true;
-	private static final int CHECKPOINT_COUNT = 50;
+	private static final int CHECKPOINT_COUNT = 10;
 	
 	/* COPY LOGIC:
 	 * 
@@ -75,6 +76,7 @@ public class MusicFolderCopier
 		Blacklist currentBlacklist = getCurrentBlacklist(blacklistPath);
 		
 		File[] files = getDirectoriesForFolder(currentLocation);
+		Arrays.sort(files);
 
 		if (files != null)
 		{
@@ -514,7 +516,7 @@ public class MusicFolderCopier
 	
 	private Blacklist getCurrentBlacklist(String blacklistPath)
 	{
-		if (blacklistPath != null)
+		if (blacklistPath != null && new File(blacklistPath).exists())
 		{
 			BlacklistParser myParser = new BlacklistParser();
 			return myParser.parse(blacklistPath);
