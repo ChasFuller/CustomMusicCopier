@@ -491,22 +491,34 @@ public class MusicFolderCopier
 						}
 					}
 					
-					// Now make sure the album directory exists
-					File albumDir = new File(artistDirectoryPath + FLACAlbumName);
-					if (!albumDir.exists())
+					String input = FLACSong.getCanonicalPath();
+					String output = artistDirectoryPath;
+					
+					if (doFlattenDirectories)
 					{
-						try
+						// If we're flattening directories we need to prepend the filename with the album for correct
+						// ordering in the artist directory.
+						String songName = FLACAlbumName + " - " + FLACSong.getBaseFilename() + ".mp3";
+						output = output + songName;
+					}
+					else
+					{
+						// Now make sure the album directory exists
+						File albumDir = new File(artistDirectoryPath + FLACAlbumName);
+						if (!albumDir.exists())
 						{
-							Files.createDirectory(albumDir.toPath());
-						}
-						catch (IOException e)
-						{
-							throw new RuntimeException("Could not create album directory " + artistDirectoryPath + FLACAlbumName, e);
-						}
+							try
+							{
+								Files.createDirectory(albumDir.toPath());
+							}
+							catch (IOException e)
+							{
+								throw new RuntimeException("Could not create album directory " + artistDirectoryPath + FLACAlbumName, e);
+							}
+						}		
+						output = output + FLACAlbumName + File.separator + FLACSong.getBaseFilename() + ".mp3";
 					}
 					
-					String input = FLACSong.getCanonicalPath();
-					String output = artistDirectoryPath + FLACAlbumName + File.separator + FLACSong.getBaseFilename() + ".mp3";
 					System.out.println("Converting " + input + " to " + output);
 					converter.convertFLACToMP3(input, output);
 				}
