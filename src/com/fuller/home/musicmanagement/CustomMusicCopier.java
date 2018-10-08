@@ -14,6 +14,7 @@ public class CustomMusicCopier
 		String copyPath = null;
 		String blacklistPath = null;
 		boolean useFLAC = false;
+		boolean flattenDirectories = false;
 		boolean simulate = false;
 		String converterPath = null;
 		
@@ -22,7 +23,7 @@ public class CustomMusicCopier
 		Scanner scanner = new Scanner(System.in);
 		System.out.println("CustomMusicCopier creates a copy of a music folder, optionally applying a specific blacklist to exclude artists and/or tracks");
 			
-		if (args.length == 6)
+		if (args.length == 7)
 		{		
 			musicPath = args[0];
 			copyPath = args[1];
@@ -37,16 +38,20 @@ public class CustomMusicCopier
 			{
 				useFLAC = true;
 			}
-			else
 
 			converterPath = args[4];
 			
 			if (args[5].toUpperCase().equals("YES"))
 			{
+				flattenDirectories = true;
+			}
+			
+			if (args[6].toUpperCase().equals("YES"))
+			{
 				simulate = true;
 			}
 			
-			printCurrentState(musicPath, copyPath, blacklistPath, useFLAC, converterPath, simulate);
+			printCurrentState(musicPath, copyPath, blacklistPath, useFLAC, converterPath, flattenDirectories, simulate);
 			isReadyToRun = true;
 		}
 		else
@@ -77,13 +82,22 @@ public class CustomMusicCopier
 					converterPath = scanner.nextLine();
 				}
 				
+				System.out.println("Do you want to flatten the album directories to just artist directories? (yes/no)");
+				String flattenDirs = scanner.nextLine();
+				if (flattenDirs.toUpperCase().equals("YES"))
+				{
+					flattenDirectories = true;
+				}
+				
 				System.out.println("Do you want to simulate the copy without actually copying the files? (yes/no)");
 				String doSimulation = scanner.nextLine();
 				if (doSimulation.toUpperCase().equals("YES"))
 				{
 					simulate = true;
 				}
-				printCurrentState(musicPath, copyPath, blacklistPath, useFLAC, converterPath, simulate);
+				
+				printCurrentState(musicPath, copyPath, blacklistPath, useFLAC, converterPath, flattenDirectories,
+						simulate);
 				
 				System.out.println("Is this right? (yes/no/exit)");
 				String readyToGo = scanner.nextLine();
@@ -102,16 +116,26 @@ public class CustomMusicCopier
 		if (isReadyToRun)
 		{
 			MusicFolderCopier copier = new MusicFolderCopier();
-			copier.copy(musicPath, copyPath, blacklistPath, useFLAC, converterPath, simulate);
-			System.out.println("Done!");
+			try
+			{
+				copier.copy(musicPath, copyPath, blacklistPath, useFLAC, converterPath, flattenDirectories, simulate);
+				System.out.println("Done!");
+			}
+			catch (IllegalArgumentException e)
+			{
+				System.out.println("Error: Values specified are not valid.");
+				System.out.println(e.getMessage());
+			}
+
 			System.out.println("Hit enter to exit.");
 			scanner.nextLine();
 		}
-			
+		
 		scanner.close();
 	}
 	
-	private static void printCurrentState(String musicPath, String copyPath, String blacklistPath, boolean useFLAC, String converterPath, boolean simulate)
+	private static void printCurrentState(String musicPath, String copyPath, String blacklistPath, boolean useFLAC, String converterPath,
+			boolean flattenDirectories, boolean simulate)
 	{
 		System.out.println("OK, here's what I have:");
 		System.out.println("\tMain music folder = " + musicPath);
@@ -132,6 +156,14 @@ public class CustomMusicCopier
 		{
 			System.out.println("\tMP3 files only.");
 			System.out.println("\tFLAC->MP3 converter location: " + converterPath);
+		}
+		if (flattenDirectories)
+		{
+			System.out.println("\tFlatten directories");
+		}
+		else
+		{
+			System.out.println("\tKeep album directories");
 		}
 		if (simulate)
 		{

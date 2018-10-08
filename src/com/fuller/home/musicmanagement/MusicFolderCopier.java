@@ -13,65 +13,34 @@ import org.apache.commons.io.FilenameUtils;
 
 public class MusicFolderCopier
 {
+	private boolean doFlattenDirectories = false;
 	private boolean isSimulation = true;
 	private static final int CHECKPOINT_COUNT = 50;
 	
-	/* COPY LOGIC:
-	 * 
-	 * Loop over artist folders in directory
-	 * 		If the artist is in the blacklist folders, skip the whole directory.
-	 * 		If the artist is not in the blacklist folders:
-	 * 			Loop over the loose songs in the artist folder, paying attention to the different file name format:
-	 * 				If the song is listed in the blacklist, skip the song
-	 * 				If the song is not listed in the blacklist:
-	 * 					If we're using FLAC and a FLAC version of the file exists
-	 * 						Add the FLAC version to the projection
-	 * 					If we're not using FLAC or a FLAC version of the file doesn't exist
-	 * 						Add the MP3 version to the projection
-	 * 			Loop over the album directories for the artist
-	 * 				If the album is listed in the blacklist, skip the album
-	 * 				If the album is not listed in the blacklist:
-	 * 					Loop over the songs in the album directory:
-	 * 						If the song is listed in the blacklist, skip the song
-	 * 						If the song is not listed in the blacklist:
-	 * 							If we're using FLAC and a FLAC version of the file exists
-	 * 								Add the FLAC version to the projection
-	 * 							If we're not using FLAC or a FLAC version of the file doesn't exist
-	 * 								Add the MP3 version to the projection
-	 * 			Manage the leftover FLACTracks in the FLACStructure
-	 * 				If we're using FLAC
-	 * 					Loop over the loose songs left in the FLACStructure:
-	 *						Add the FLACTrack to the projection
-	 * 					Loop over the albums in the FLACStructure:
-	 * 						Loop over the FLACTracks left for the album in the FLACStructure
-	 * 							Add the FLACTrack to the projection
-	 * 				If we're using MP3 add the FLACStructure to the projection as the songs to convert
-	 * 			Use the projection to copy all the appropriate artist songs, MP3 and FLAC
-	 * 			Manage FLAC to MP3 conversions
-	 * 				Loop over the loose songs left in the FLACStructure:
-	 *					Convert the FLACTrack to the destination (creating the artist folder if needed)
-	 * 				Loop over the albums in the FLACStructure:
-	 * 					Loop over the FLACTracks left for the album in the FLACStructure
-	 * 						Convert the FLACTrack to the destination (creating the artist folder AND album folder if needed)		
-	 * 			
-	 */
-	
-	public void copy(String currentLocation, String newLocation, String blacklistPath, String converterPath, boolean useFLAC)
+	public void copy(String currentLocation, String newLocation, String blacklistPath, String converterPath, boolean useFLAC,
+			boolean flattenDirectories)
 	{	
-		// Default simulation value to true
-		copy(currentLocation, newLocation, blacklistPath, useFLAC, converterPath, true);
+		// Default simulation value to false
+		copy(currentLocation, newLocation, blacklistPath, useFLAC, converterPath, flattenDirectories, false);
 	}
 	
-	public void copy(String currentLocation, String newLocation, String blacklistPath, boolean useFLAC, String converterPath, boolean simulate)
+	public void copy(String currentLocation, String newLocation, String blacklistPath, boolean useFLAC, String converterPath,
+			boolean flattenDirectories, boolean simulate)
 	{		
-		isSimulation = simulate;
-		int counter = 0;
-		long timer = System.currentTimeMillis();
-		
 		if (currentLocation == null || currentLocation.isEmpty())
 		{
 			throw new IllegalArgumentException("Set root path before calling create");
 		}
+		
+		if (!new File(currentLocation).exists())
+		{
+			throw new IllegalArgumentException("Music location specified (" + currentLocation + ") does not exist!");
+		}
+		
+		doFlattenDirectories = flattenDirectories;
+		isSimulation = simulate;
+		int counter = 0;
+		long timer = System.currentTimeMillis();
 
 		Blacklist currentBlacklist = getCurrentBlacklist(blacklistPath);
 		
@@ -275,9 +244,13 @@ public class MusicFolderCopier
 								newCanonicalPathSB.append(File.separator);
 								newCanonicalPathSB.append(artistDirectoryName);
 								newCanonicalPathSB.append(File.separator);
-								newCanonicalPathSB.append(albumDirectoryName);
-								newCanonicalPathSB.append(File.separator);
 								
+								if (!doFlattenDirectories)
+								{
+									// Only add the album name to the path if we aren't flattening directories
+									newCanonicalPathSB.append(albumDirectoryName);
+									newCanonicalPathSB.append(File.separator);
+								}	
 								
 								if (mcs.getOutputType().equals(MusicFileOutputType.FLAC) && mcs.getArtistFLACStructure() != null)
 								{
@@ -285,7 +258,15 @@ public class MusicFolderCopier
 									if (FLACVersion != null)
 									{
 										useMP3File = false;
-										newCanonicalPathSB.append(FLACVersion.getFilename());
+										String FLACFilename = FLACVersion.getFilename();
+										if (doFlattenDirectories)
+										{
+											// If we're flattening directories we need to prepend the filename with the album for correct
+											// ordering in the artist directory.
+											FLACFilename = albumDirectoryName + " - " + FLACFilename;
+										}
+										
+										newCanonicalPathSB.append(FLACFilename);
 										SongProjection flacDetails = new SongProjection(FLACVersion.getCanonicalPath(), newCanonicalPathSB.toString());
 										mcs.getArtistProjection().addAlbumTrack(albumDirectoryName, flacDetails);
 									}	
@@ -294,6 +275,13 @@ public class MusicFolderCopier
 								if (useMP3File)
 								{
 									// No FLAC files, add the MP3
+									if (doFlattenDirectories)
+									{
+										// If we're flattening directories we need to prepend the filename with the album for correct
+										// ordering in the artist directory.
+										albumSongName = albumDirectoryName + " - " + albumSongName;
+									}
+					
 									newCanonicalPathSB.append(albumSongName);	
 									SongProjection mp3Details = new SongProjection(anAlbumSong.getCanonicalPath(), newCanonicalPathSB.toString());
 									mcs.getArtistProjection().addAlbumTrack(albumDirectoryName, mp3Details);
@@ -366,7 +354,19 @@ public class MusicFolderCopier
 					}
 					else
 					{
-						String newPath = artistDirectoryPath + FLACAlbumName + File.separator + FLACSong.getFilename();
+						String newPath = artistDirectoryPath;
+								
+						if (doFlattenDirectories)
+						{
+							// If we're flattening directories we need to prepend the filename with the album for correct
+							// ordering in the artist directory.
+							String songTitle = FLACAlbumName + " - " + FLACSong.getFilename();
+							newPath = newPath + songTitle;
+						}
+						else
+						{
+							newPath = artistDirectoryPath + FLACAlbumName + File.separator + FLACSong.getFilename();
+						}
 						SongProjection FLACDetails = new SongProjection(FLACSong.getCanonicalPath(), newPath);
 						mcs.getArtistProjection().addAlbumTrack(FLACAlbumName, FLACDetails);
 					}
